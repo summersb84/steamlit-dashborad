@@ -221,8 +221,21 @@ for _, row in recent_3m_mom.iterrows():
         f"{abs(row['mom']):.1f}% {direction}\n"
     )
 
-- 최근 3개월 MoM 추이
+st.markdown(
+"""
+<div style="
+background-color:#f8f9fa;
+padding:15px;
+border-radius:10px;
+">
+
+### 📊 최근 3개월 MoM
 {mom_text}
+
+</div>
+""",
+unsafe_allow_html=True
+)
 
 st.info(
     f"""
