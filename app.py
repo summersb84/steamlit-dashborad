@@ -320,6 +320,7 @@ with col3:
 # 사용자 추이
 # ------------------
 
+
 fig_customer = px.line(
     customer_monthly,
     x="month",
@@ -331,7 +332,8 @@ fig_customer = px.line(
 
 fig_customer.update_layout(
     yaxis=dict(
-        range=[0, y_max*1.2]
+        rangemode="tozero",
+        constrain="domain"
     )
 )
 
