@@ -25,4 +25,4 @@ df = pd.DataFrame({
 
 fig = px.bar(df, x="고객", y="매출")
 
-st.plotly_chart(fig)
+st.plotly_chart(fig, use_container_width=True)
