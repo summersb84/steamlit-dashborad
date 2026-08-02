@@ -26,6 +26,36 @@ def get_connection():
 conn = get_connection()
 
 
+st.markdown(
+    """
+    <div style="
+        background-color:#f8f9fa;
+        padding:15px;
+        border-radius:8px;
+        font-size:14px;
+        line-height:1.6;
+    ">
+    <b>Dashboard 목적</b><br>
+    본 Dashboard는 데이터 분석에서 화면 작성까지 일련의 흐름을
+    구성해 보고자 작성한 내용입니다.<br><br>
+
+    <b>환경 구성</b><br>
+    Jupyter notebook을 통한 코드 작성<br>
+    BI streaming을 위한 Github 및 streamlit Cloud 환경 설정<br>
+    <br><br>
+
+    <b>작성자 정보</b><br>
+    • 이름 : 박승배<br>
+    • Mail : summersb84@gmail.com<br>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+
 # ------------------
 # 데이터 함수
 # ------------------
