@@ -73,6 +73,9 @@ st.markdown(
 )
 
 
+st.write("")
+
+
 col1,col2,col3 = st.columns(3)
 
 
@@ -131,7 +134,7 @@ st.plotly_chart(
     use_container_width=True
 )
 
-
+st.divider()
 
 # ------------------
 # 인기 Artist
@@ -164,13 +167,17 @@ fig = px.bar(
     orientation="h"
 )
 
+fig.update_yaxes(
+    autorange="reversed"
+)
+
 
 st.plotly_chart(
     fig,
     use_container_width=True
 )
 
-
+st.divider()
 
 # ------------------
 # 장르 분석
