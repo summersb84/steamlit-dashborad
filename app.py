@@ -97,7 +97,7 @@ col3.metric(
 )
 
 col4.metric(
-    "AOV",
+    "건단가",
     f"${kpi.aov[0]:,.2f}"
 )
 
@@ -196,34 +196,108 @@ st.divider()
 # 장르 분석
 # ------------------
 
-st.subheader("Genre Sales")
+
+col1, col2 = st.columns(2)
+
+# 왼쪽 : 전체 장르 점유율
+with col1:
+
+    st.subheader("Genre Sales")
 
 
-genre = load_data("""
-SELECT
-Genre.Name,
-COUNT(*) sales
-FROM Genre
-JOIN Track
-ON Genre.GenreId=Track.GenreId
-JOIN InvoiceLine
-ON Track.TrackId=InvoiceLine.TrackId
-GROUP BY Genre.Name
-ORDER BY sales DESC
-""")
+    genre = load_data("""
+    SELECT
+        Genre.Name,
+        COUNT(*) sales
+    FROM Genre
+    JOIN Track
+        ON Genre.GenreId = Track.GenreId
+    JOIN InvoiceLine
+        ON Track.TrackId = InvoiceLine.TrackId
+    GROUP BY Genre.Name
+    ORDER BY sales DESC
+    """)
 
 
-fig = px.pie(
-    genre,
-    names="Name",
-    values="sales"
-)
-
-fig.update_traces(
+    fig = px.pie(
+        genre,
+        names="Name",
+        values="sales"
+    )
+    
+    fig.update_traces(
     texttemplate="%{label}<br>%{percent}",
     textposition="inside"
-)
+    )
 
-st.plotly_chart(
-    fig,
-    use_container_width=True)
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
+
+
+# 오른쪽 : 지역별 장르 분석
+with col2:
+
+    st.subheader("Region Genre Sales")
+
+
+    region_genre = load_data("""
+    SELECT
+        c.Country,
+        g.Name AS Genre,
+        SUM(il.Quantity) AS sales
+    FROM Customer c
+    JOIN Invoice i
+        ON c.CustomerId = i.CustomerId
+    JOIN InvoiceLine il
+        ON i.InvoiceId = il.InvoiceId
+    JOIN Track t
+        ON il.TrackId = t.TrackId
+    JOIN Genre g
+        ON t.GenreId = g.GenreId
+    GROUP BY
+        c.Country,
+        g.Name
+    """)
+
+
+    country = st.selectbox(
+        "지역 선택",
+        region_genre["Country"].unique()
+    )
+
+
+    filtered = region_genre[
+        region_genre["Country"] == country
+    ]
+
+
+    filtered = (
+        filtered
+        .sort_values(
+            "sales",
+            ascending=False
+        )
+        .head(5)
+    )
+
+
+    fig = px.bar(
+        filtered,
+        x="sales",
+        y="Genre",
+        orientation="h"
+    )
+
+
+    fig.update_yaxes(
+        autorange="reversed"
+    )
+
+
+    st.plotly_chart(
+        fig,
+        use_container_width=True
+    )
