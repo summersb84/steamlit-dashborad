@@ -50,7 +50,10 @@ st.markdown(
     <b>분석 내용</b><br>
     음원 판매 데이터를 기반으로, 매출, 고객, 상품 성과를 분석하여<br>
     주요 비즈니스 지표를 확인하고 데이터 기반 의사결정을 지원합니다.<br><br>
-    
+
+    Created : 2026-08-02<br>
+    Version : v0.7
+    Last Updated : 2026-08-03<br>
     </div>
     """,
     unsafe_allow_html=True
