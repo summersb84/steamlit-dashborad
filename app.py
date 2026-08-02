@@ -51,6 +51,8 @@ SELECT
 SUM(Total) revenue,
 COUNT(*) orders,
 COUNT(DISTINCT CustomerId) customers,
+SUM(Total) / COUNT(*) aov,
+SUM(Total) / COUNT(DISTINCT CustomerId) ARPU,
 MIN(InvoiceDate) start_date,
 MAX(InvoiceDate) end_date
 FROM Invoice
@@ -76,7 +78,7 @@ st.markdown(
 st.write("")
 
 
-col1,col2,col3 = st.columns(3)
+col1,col2,col3,col4,col5 = st.columns(5)
 
 
 col1.metric(
@@ -93,6 +95,17 @@ col3.metric(
     "고객 수",
     kpi.customers[0]
 )
+
+col4.metric(
+    "AOV",
+    f"${kpi.aov[0]:,.2f}"
+)
+
+col5.metric(
+    "ARPU",
+    kpi.ARPU[0]
+)
+        
 
 st.divider()
 
@@ -140,7 +153,7 @@ st.divider()
 # 인기 Artist
 # ------------------
 
-st.subheader("Top Artist")
+st.subheader("Top 10 Artist")
 
 
 artist = load_data("""
@@ -206,6 +219,10 @@ fig = px.pie(
     values="sales"
 )
 
+fig.update_traces(
+    texttemplate="%{label}<br>%{percent}",
+    textposition="inside"
+)
 
 st.plotly_chart(
     fig,
