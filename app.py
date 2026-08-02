@@ -321,7 +321,7 @@ with col1:
 with col2:
     st.metric(
         "New Customers",
-        f"{last_customer['new_customers']:,.0}"
+        f"{last_customer['new_customers']:,.0f}"
     )
 
 
@@ -376,7 +376,7 @@ for _, row in recent_customer.iterrows():
     customer_text += (
         f"- {row['month']} : "
         f"Active : {row['active_customers']:,}명 / "
-        f"New : {row['new_customers']:,.0}명 / "
+        f"New : {row['new_customers']:,.0f}명 / "
         f"ARPU : ${row['arpu']:,.1f}\n"
     )
 
