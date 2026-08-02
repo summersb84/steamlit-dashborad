@@ -357,9 +357,9 @@ for _, row in recent_customer.iterrows():
 
     customer_text += (
         f"- {row['month']} : "
-        f"Active {row['active_customers']:,}명 / "
-        f"New {row['new_customers']:,}명 / "
-        f"ARPU ${row['arpu']:,.2f}\n"
+        f"Active : {row['active_customers']:,}명 / "
+        f"New : {row['new_customers']:,}명 / "
+        f"ARPU : ${row['arpu']:,.1f}\n"
     )
 
 
