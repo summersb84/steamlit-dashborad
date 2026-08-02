@@ -221,24 +221,15 @@ for _, row in recent_3m_mom.iterrows():
         f"{abs(row['mom']):.1f}% {direction}\n"
     )
 
-st.markdown(
-f"""
-<div style="
-background-color:#f8f9fa;
-padding:10px;
-border-radius:10px;
-">
-
-### 📊 Insight
-
-최근 3개월 매출 성장률(MoM)
-
-{mom_text}
-
-</div>
-""",
-unsafe_allow_html=True
-)
+# 최근 3개월 MoM
+with st.container(border=True):
+    st.markdown(
+        f"""
+        ### 📊 최근 3개월 MoM
+        
+        {mom_text}
+        """
+    )
 
 st.write("")
 
