@@ -26,7 +26,16 @@ def get_connection():
 
 conn = get_connection()
 
+# DB 연결 확인
+st.write("DB 연결 성공")
 
+tables = pd.read_sql("""
+SELECT name
+FROM sqlite_master
+WHERE type='table'
+""", conn)
+
+st.write(tables)
 
 # ------------------
 # 데이터 함수
