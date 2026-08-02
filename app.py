@@ -1,28 +1,182 @@
 import streamlit as st
 import pandas as pd
+import sqlite3
 import plotly.express as px
 
-st.title("나의 첫 Streamlit 앱")
 
-st.write("GitHub + Streamlit Cloud 테스트")
+# ------------------
+# 설정
+# ------------------
 
-data = {
-    "name": ["A", "B", "C"],
-    "score": [90, 80, 70]
-}
-
-df = pd.DataFrame(data)
-
-st.dataframe(df)
+st.set_page_config(
+    page_title="Music Store BI Dashboard",
+    layout="wide"
+)
 
 
-st.title("고객 분석 Dashboard")
+# DB 연결
 
-df = pd.DataFrame({
-    "고객": ["A", "B", "C"],
-    "매출": [100, 200, 300]
-})
+@st.cache_resource
+def get_connection():
+    return sqlite3.connect(
+        "chinook.db",
+        check_same_thread=False
+    )
 
-fig = px.bar(df, x="고객", y="매출")
 
-st.plotly_chart(fig, use_container_width=True)
+conn = get_connection()
+
+
+
+# ------------------
+# 데이터 함수
+# ------------------
+
+@st.cache_data
+def load_data(sql):
+
+    return pd.read_sql(
+        sql,
+        conn
+    )
+
+
+
+# ------------------
+# KPI
+# ------------------
+
+st.title("🎵 Music Store BI Dashboard")
+
+
+kpi = load_data("""
+SELECT
+SUM(Total) revenue,
+COUNT(*) orders,
+COUNT(DISTINCT CustomerId) customers
+FROM Invoice
+""")
+
+
+col1,col2,col3 = st.columns(3)
+
+
+col1.metric(
+    "총 매출",
+    f"${kpi.revenue[0]:,.0f}"
+)
+
+col2.metric(
+    "주문 수",
+    kpi.orders[0]
+)
+
+col3.metric(
+    "고객 수",
+    kpi.customers[0]
+)
+
+
+
+# ------------------
+# 월별 매출
+# ------------------
+
+st.subheader("월별 매출")
+
+
+monthly = load_data("""
+SELECT
+strftime('%Y-%m',InvoiceDate) month,
+SUM(Total) revenue
+FROM Invoice
+GROUP BY month
+ORDER BY month
+""")
+
+
+fig = px.line(
+    monthly,
+    x="month",
+    y="revenue",
+    markers=True
+)
+
+
+st.plotly_chart(
+    fig,
+    use_container_width=True
+)
+
+
+
+# ------------------
+# 인기 Artist
+# ------------------
+
+st.subheader("Top Artist")
+
+
+artist = load_data("""
+SELECT
+Artist.Name,
+SUM(InvoiceLine.UnitPrice) revenue
+FROM Artist
+JOIN Album
+ON Artist.ArtistId=Album.ArtistId
+JOIN Track
+ON Album.AlbumId=Track.AlbumId
+JOIN InvoiceLine
+ON Track.TrackId=InvoiceLine.TrackId
+GROUP BY Artist.Name
+ORDER BY revenue DESC
+LIMIT 10
+""")
+
+
+fig = px.bar(
+    artist,
+    x="revenue",
+    y="Name",
+    orientation="h"
+)
+
+
+st.plotly_chart(
+    fig,
+    use_container_width=True
+)
+
+
+
+# ------------------
+# 장르 분석
+# ------------------
+
+st.subheader("Genre Sales")
+
+
+genre = load_data("""
+SELECT
+Genre.Name,
+COUNT(*) sales
+FROM Genre
+JOIN Track
+ON Genre.GenreId=Track.GenreId
+JOIN InvoiceLine
+ON Track.TrackId=InvoiceLine.TrackId
+GROUP BY Genre.Name
+ORDER BY sales DESC
+""")
+
+
+fig = px.pie(
+    genre,
+    names="Name",
+    values="sales"
+)
+
+
+st.plotly_chart(
+    fig,
+    use_container_width=True)
