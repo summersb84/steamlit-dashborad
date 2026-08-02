@@ -197,7 +197,7 @@ st.divider()
 # ------------------
 
 
-col1, divider, col2 = st.columns([5, 0.1, 5)
+col1, divider, col2 = st.columns([5, 0.1, 5])
 
 # 왼쪽 : 전체 장르 점유율
 with col1:
