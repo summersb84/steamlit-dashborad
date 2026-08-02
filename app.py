@@ -100,6 +100,10 @@ fig = px.line(
     markers=True
 )
 
+fig.update_yaxes(
+    rangemode="tozero"
+)
+
 
 st.plotly_chart(
     fig,
