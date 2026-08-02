@@ -40,13 +40,17 @@ st.markdown(
     구성해 보고자 작성한 내용입니다.<br><br>
 
     <b>환경 구성</b><br>
-    Jupyter notebook을 통한 코드 작성<br>
-    BI streaming을 위한 Github 및 streamlit Cloud 환경 설정<br>
-    <br><br>
+    데이터 출처 : Chinook Databse<br>
+    분석 도구 : Python, Streamlit, SQLite<br><br>
 
     <b>작성자 정보</b><br>
     • 이름 : 박승배<br>
-    • Mail : summersb84@gmail.com<br>
+    • Mail : summersb84@gmail.com<br><br>
+
+    <b>분석 내용</b><br>
+    음원 판매 데이터를 기반으로, 매출, 고객, 상품 성과를 분석하여<br>
+    주요 비즈니스 지표를 확인하고 데이터 기반 의사결정을 지원합니다.<br><br>
+    
     </div>
     """,
     unsafe_allow_html=True
