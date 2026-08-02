@@ -331,7 +331,7 @@ fig_customer = px.line(
 
 fig_customer.update_layout(
     yaxis=dict(
-        rangemode="tozero"
+        range=[0, y_max*1.2]
     )
 )
 
