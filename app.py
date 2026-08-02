@@ -46,15 +46,27 @@ def load_data(sql):
 
 st.title("🎵 Music Store BI Dashboard")
 
-
 kpi = load_data("""
 SELECT
 SUM(Total) revenue,
 COUNT(*) orders,
-COUNT(DISTINCT CustomerId) customers
+COUNT(DISTINCT CustomerId) customers,
+MIN(InvoiceDate) start_date,
+MAX(InvoiceDate) end_date
 FROM Invoice
 """)
 
+start = pd.to_datetime(kpi.start_date[0]).strftime("%Y-%m-%d")
+end = pd.to_datetime(kpi.end_date[0]).strftime("%Y-%m-%d")
+
+st.markdown(
+    f"""
+    <div style='font-size:14px; color:gray;'>
+    📅 판매 기간 : {start} ~ {end}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 col1,col2,col3 = st.columns(3)
 
@@ -97,11 +109,15 @@ fig = px.line(
     monthly,
     x="month",
     y="revenue",
-    markers=True
+    markers=True,
+    title = "Monthly Revenue Treand"
 )
 
-fig.update_yaxes(
-    rangemode="tozero"
+fig.update_layout(
+    yaxis=dict(
+        rangemode="tozero",
+        tickformat="$,.0f"
+    )
 )
 
 
