@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import plotly.express as px
-
+import os
 
 # ------------------
 # 설정
@@ -26,6 +26,8 @@ def get_connection():
 
 conn = get_connection()
 
+st.write(os.listdir())
+
 # DB 연결 확인
 st.write("DB 연결 성공")
 
@@ -36,6 +38,8 @@ WHERE type='table'
 """, conn)
 
 st.write(tables)
+
+
 
 # ------------------
 # 데이터 함수
