@@ -19,7 +19,7 @@ st.set_page_config(
 @st.cache_resource
 def get_connection():
     return sqlite3.connect(
-        "chinook.db",
+        "data/chinook.db",
         check_same_thread=False
     )
 
