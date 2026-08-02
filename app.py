@@ -330,13 +330,13 @@ fig_customer = px.line(
 )
 
 
+y_max = customer_monthly["active_customers"].max()
+
 fig_customer.update_layout(
     yaxis=dict(
-        rangemode="tozero",
-        constrain="domain"
+        range=[0, y_max * 1.2]
     )
 )
-
 
 st.plotly_chart(
     fig_customer,
