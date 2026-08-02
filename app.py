@@ -103,7 +103,7 @@ col4.metric(
 
 col5.metric(
     "ARPU",
-    kpi.ARPU[0]
+    f"${kpi.ARPU[0]:,.1f}"
 )
         
 
