@@ -236,6 +236,145 @@ f"""
 
 st.divider()
 
+
+# ------------------
+# 구매자 지표
+# ------------------
+
+st.subheader("Customer Overview")
+
+
+customer_monthly = load_data("""
+WITH first_purchase AS (
+    SELECT
+        CustomerId,
+        MIN(date(InvoiceDate)) AS first_date
+    FROM Invoice
+    GROUP BY CustomerId
+)
+
+SELECT
+    i.month,
+    i.active_customers,
+    n.new_customers,
+    i.revenue,
+    ROUND(i.revenue / i.active_customers, 2) AS arpu
+
+FROM
+(
+    SELECT
+        strftime('%Y-%m', InvoiceDate) AS month,
+        COUNT(DISTINCT CustomerId) AS active_customers,
+        SUM(Total) AS revenue
+    FROM Invoice
+    GROUP BY month
+) i
+
+LEFT JOIN
+(
+    SELECT
+        strftime('%Y-%m', first_date) AS month,
+        COUNT(CustomerId) AS new_customers
+    FROM first_purchase
+    GROUP BY month
+) n
+
+ON i.month = n.month
+
+ORDER BY i.month
+""")
+
+
+# ------------------
+# 구매자 KPI
+# ------------------
+
+last_customer = customer_monthly.iloc[-1]
+
+
+col1, col2, col3 = st.columns(3)
+
+
+with col1:
+    st.metric(
+        "Active Customers",
+        f"{last_customer['active_customers']:,}"
+    )
+
+
+with col2:
+    st.metric(
+        "New Customers",
+        f"{last_customer['new_customers']:,}"
+    )
+
+
+with col3:
+    st.metric(
+        "ARPU",
+        f"${last_customer['arpu']:,.2f}"
+    )
+
+
+# ------------------
+# 사용자 추이
+# ------------------
+
+fig_customer = px.line(
+    customer_monthly,
+    x="month",
+    y="active_customers",
+    markers=True,
+    title="Monthly Active Customers"
+)
+
+
+fig_customer.update_layout(
+    yaxis=dict(
+        rangemode="tozero"
+    )
+)
+
+
+st.plotly_chart(
+    fig_customer,
+    use_container_width=True
+)
+
+
+# ------------------
+# 고객 Insight
+# ------------------
+
+recent_customer = customer_monthly.tail(4)
+
+
+customer_text = ""
+
+for _, row in recent_customer.iterrows():
+
+    customer_text += (
+        f"- {row['month']} : "
+        f"Active {row['active_customers']:,}명 / "
+        f"New {row['new_customers']:,}명 / "
+        f"ARPU ${row['arpu']:,.2f}<br>"
+    )
+
+
+st.info(
+f"""
+📊 **최근 4개월 고객 현황**
+
+{customer_text}
+"""
+)
+
+
+st.divider()
+
+
+
+
 # ------------------
 # 인기 Artist
 # ------------------
