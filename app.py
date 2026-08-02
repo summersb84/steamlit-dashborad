@@ -204,23 +204,22 @@ worst = monthly.loc[monthly["revenue"].idxmin()]
 
 
 # 최근 3개월 MoM (마지막 월 제외)
-recent_3m = monthly.iloc[-4:-1]
+recent_3m_mom = monthly.iloc[-4:-1]
 
-insight_text = ""
 
-for _, row in recent_3m.iterrows():
+#자동 Insight
+direction = "증가" if last["mom"] > 0 else "감소"
 
-    if row["mom"] >= 0:
-        icon = "▲"
-    else:
-        icon = "▼"
 
-    insight_text += (
+mom_text = ""
+
+for _, row in recent_3m_mom.iterrows():
+    direction = "증가" if row["mom"] > 0 else "감소"
+
+    mom_text += (
         f"- {row['month']} : "
-        f"${row['revenue']:,.0f} "
-        f"({icon} {abs(row['mom']):.1f}%)<br>"
+        f"{abs(row['mom']):.1f}% {direction}\n"
     )
-
 
 st.markdown(
 f"""
@@ -230,12 +229,10 @@ border-radius:8px;
 ">
 
 <span style="font-size:14px; font-weight:bold;">
-📊  최근 3개월 매출 현황
+📊  최근 3개월 매출 성장률(MoM)
 </span>
 
-<br><br>
-
-{insight_text}
+{mom_text}
 
 </div>
 """,
