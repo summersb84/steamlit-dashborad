@@ -222,20 +222,25 @@ for _, row in recent_3m_mom.iterrows():
     )
 
 st.markdown(
-"""
+f"""
 <div style="
 background-color:#f8f9fa;
-padding:15px;
+padding:10px;
 border-radius:10px;
 ">
 
-### 📊 최근 3개월 MoM
+### 📊 Insight
+
+최근 3개월 매출 성장률(MoM)
+
 {mom_text}
 
 </div>
 """,
 unsafe_allow_html=True
 )
+
+st.write("")
 
 st.info(
     f"""
