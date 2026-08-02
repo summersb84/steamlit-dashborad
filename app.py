@@ -203,23 +203,31 @@ best = monthly.loc[monthly["revenue"].idxmax()]
 worst = monthly.loc[monthly["revenue"].idxmin()]
 
 
-# 최근 3개월 MoM (마지막 월 제외)
-recent_3m_mom = monthly.iloc[-4:-1]
+recent_4m = monthly.tail(4)
 
 
-#자동 Insight
-direction = "증가" if last["mom"] > 0 else "감소"
+insight_text = ""
 
+for _, row in recent_4m.iterrows():
 
-mom_text = ""
+    # 첫 번째 월은 MoM 없음
+    if pd.isna(row["mom"]):
+        insight_text += (
+            f"- {row['month']} : "
+            f"${row['revenue']:,.0f}<br>"
+        )
+    else:
+        if row["mom"] >= 0:
+            icon = "▲"
+        else:
+            icon = "▼"
 
-for _, row in recent_3m_mom.iterrows():
-    direction = "증가" if row["mom"] > 0 else "감소"
+        insight_text += (
+            f"- {row['month']} : "
+            f"${row['revenue']:,.0f} "
+            f"({icon} {abs(row['mom']):.1f}%)<br>"
+        )
 
-    mom_text += (
-        f"- {row['month']} : "
-        f"{abs(row['mom']):.1f}% {direction}\n"
-    )
 
 st.markdown(
 f"""
@@ -228,26 +236,17 @@ padding:8px;
 border-radius:8px;
 ">
 
-<span style="font-size:14px; font-weight:bold;">
-📊  최근 3개월 매출 성장률(MoM)
+<span style="font-size:15px; font-weight:bold;">
+📊 최근 4개월 매출 현황
 </span>
 
-{mom_text}
+<br><br>
+
+{insight_text}
 
 </div>
 """,
 unsafe_allow_html=True
-)
-
-st.write("")
-
-st.info(
-    f"""
-📊 **Insight**
-
-- 최근 월 매출은 전월 대비 **{abs(last['mom']):.1f}% {direction}** 했습니다.
-- 평균 월 매출은 **${monthly['revenue'].mean():,.0f}**
-"""
 )
 
 
