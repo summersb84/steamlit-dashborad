@@ -92,6 +92,8 @@ MAX(InvoiceDate) end_date
 FROM Invoice
 """)
 
+
+
 start = pd.to_datetime(kpi.start_date[0]).strftime("%Y-%m-%d")
 end = pd.to_datetime(kpi.end_date[0]).strftime("%Y-%m-%d")
 
@@ -285,6 +287,20 @@ ORDER BY i.month
 """)
 
 
+customer_monthly[
+    [
+        "active_customers",
+        "new_customers",
+        "arpu"
+    ]
+] = customer_monthly[
+    [
+        "active_customers",
+        "new_customers",
+        "arpu"
+    ]
+].fillna(0)
+
 # ------------------
 # 구매자 KPI
 # ------------------
@@ -347,6 +363,8 @@ st.plotly_chart(
 # ------------------
 # 고객 Insight
 # ------------------
+
+
 
 recent_customer = customer_monthly.tail(4)
 
