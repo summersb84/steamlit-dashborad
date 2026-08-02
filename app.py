@@ -18,7 +18,7 @@ st.set_page_config(
 @st.cache_resource
 def get_connection():
     return sqlite3.connect(
-        "data/chinook.db",
+        "data/Chinook.db",
         check_same_thread=False
     )
 
@@ -36,7 +36,6 @@ WHERE type='table'
 """, conn)
 
 st.write(tables)
-
 
 
 # ------------------
