@@ -129,7 +129,7 @@ ORDER BY month
 fig = px.line(
     monthly,
     x="month",
-    y="revenue($)",
+    y="revenue",
     markers=True,
     title = "Monthly Revenue Treand"
 )
@@ -176,7 +176,7 @@ LIMIT 10
 fig = px.bar(
     artist,
     x="revenue",
-    y="Artist",
+    y="Name",
     orientation="h"
 )
 
