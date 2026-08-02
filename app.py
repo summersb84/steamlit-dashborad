@@ -252,7 +252,7 @@ with divider:
 # 오른쪽 : 지역별 장르 분석
 with col2:
 
-    st.subheader("지역별 장르별 현황")
+    st.subheader("지역별 장르별 판매건수")
 
 
     region_genre = load_data("""
@@ -289,7 +289,7 @@ with col2:
     filtered = (
         filtered
         .sort_values(
-            "sales(건)",
+            "sales",
             ascending=False
         )
         .head(5)
