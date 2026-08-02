@@ -31,7 +31,7 @@ st.write("DB 연결 성공")
 
 tables = pd.read_sql("""
 SELECT name
-FROM sqlite_master
+FROM sqlite_schema
 WHERE type='table'
 """, conn)
 
