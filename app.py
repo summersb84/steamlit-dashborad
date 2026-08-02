@@ -181,6 +181,42 @@ st.plotly_chart(
     use_container_width=True
 )
 
+
+#전월 대비 계산
+monthly["prev_revenue"] = monthly["revenue"].shift(1)
+
+monthly["mom"] = (
+    (monthly["revenue"] - monthly["prev_revenue"])
+    / monthly["prev_revenue"] * 100
+).round(1)
+
+# KPI 계산
+last = monthly.iloc[-1]
+prev = monthly.iloc[-2]
+
+change = (
+    (last["revenue"] - prev["revenue"])
+    / prev["revenue"] * 100
+)
+
+best = monthly.loc[monthly["revenue"].idxmax()]
+worst = monthly.loc[monthly["revenue"].idxmin()]
+
+#자동 Insight
+direction = "증가" if last["mom"] > 0 else "감소"
+
+st.info(
+    f"""
+📊 **Insight**
+
+- 최근 월 매출은 전월 대비 **{abs(last['mom']):.1f}% {direction}**했습니다.
+- 최고 매출은 **{best['month']} (${best['revenue']:,.0f})**입니다.
+- 최저 매출은 **{worst['month']} (${worst['revenue']:,.0f})**입니다.
+- 평균 월 매출은 **${monthly['revenue'].mean():,.0f}**입니다.
+"""
+)
+
+
 st.divider()
 
 # ------------------
