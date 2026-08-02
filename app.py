@@ -98,7 +98,7 @@ col3.metric(
 
 col4.metric(
     "건단가",
-    f"${kpi.aov[0]:,.2f}"
+    f"${kpi.aov[0]:,.1f}"
 )
 
 col5.metric(
@@ -129,7 +129,7 @@ ORDER BY month
 fig = px.line(
     monthly,
     x="month",
-    y="revenue",
+    y="revenue($)",
     markers=True,
     title = "Monthly Revenue Treand"
 )
@@ -176,7 +176,7 @@ LIMIT 10
 fig = px.bar(
     artist,
     x="revenue",
-    y="Name",
+    y="Artist",
     orientation="h"
 )
 
@@ -202,7 +202,7 @@ col1, divider, col2 = st.columns([5, 0.1, 5])
 # 왼쪽 : 전체 장르 점유율
 with col1:
 
-    st.subheader("Genre Sales")
+    st.subheader("장르별 판매건수")
 
 
     genre = load_data("""
@@ -252,7 +252,7 @@ with divider:
 # 오른쪽 : 지역별 장르 분석
 with col2:
 
-    st.subheader("Region Genre Sales")
+    st.subheader("지역별 장르별 현황")
 
 
     region_genre = load_data("""
@@ -289,7 +289,7 @@ with col2:
     filtered = (
         filtered
         .sort_values(
-            "sales",
+            "sales(건)",
             ascending=False
         )
         .head(5)
