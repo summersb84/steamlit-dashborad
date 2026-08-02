@@ -203,32 +203,32 @@ best = monthly.loc[monthly["revenue"].idxmax()]
 worst = monthly.loc[monthly["revenue"].idxmin()]
 
 
-# 최근 3개월 MoM 데이터
-recent_3m = monthly.tail(3)
+# 최근 3개월 MoM (마지막 월 제외)
+recent_3m_mom = monthly.iloc[-4:-1]
 
 
 #자동 Insight
 direction = "증가" if last["mom"] > 0 else "감소"
 
 
-# 최근 3개월 MoM 문자열 생성
 mom_text = ""
 
-for _, row in recent_3m.iterrows():
-    mom_direction = "증가" if row["mom"] > 0 else "감소"
-    
+for _, row in recent_3m_mom.iterrows():
+    direction = "증가" if row["mom"] > 0 else "감소"
+
     mom_text += (
         f"- {row['month']} : "
-        f"{abs(row['mom']):.1f}% {mom_direction}\n"
+        f"{abs(row['mom']):.1f}% {direction}\n"
     )
+
+- 최근 3개월 MoM 추이
+{mom_text}
 
 st.info(
     f"""
 📊 **Insight**
 
 - 최근 월 매출은 전월 대비 **{abs(last['mom']):.1f}% {direction}** 했습니다.
-- 최근 3개월 MoM 추이
-{mom_text}
 - 평균 월 매출은 **${monthly['revenue'].mean():,.0f}**
 """
 )
