@@ -197,7 +197,7 @@ st.divider()
 # ------------------
 
 
-col1, col2 = st.columns(2)
+col1, divider, col2 = st.columns([5, 0.1, 5)
 
 # 왼쪽 : 전체 장르 점유율
 with col1:
@@ -236,6 +236,18 @@ with col1:
         use_container_width=True
     )
 
+
+with divider:
+    st.markdown(
+        """
+        <div style="
+            border-left:1px solid #ddd;
+            height:500px;
+        ">
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 # 오른쪽 : 지역별 장르 분석
 with col2:
