@@ -228,7 +228,9 @@ padding:8px;
 border-radius:8px;
 ">
 
-### 📊 최근 3개월 매출 성장률(MoM)
+<span style="font-size:14px; font-weight:bold;">
+📊 최근 3개월 매출 성장률(MoM)
+</span>
 
 {mom_text}
 
