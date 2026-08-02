@@ -52,7 +52,7 @@ st.markdown(
     주요 비즈니스 지표를 확인하고 데이터 기반 의사결정을 지원합니다.<br><br>
 
     Created : 2026-08-02<br>
-    Version : v0.7
+    Version : v0.7<br>
     Last Updated : 2026-08-03<br>
     </div>
     """,
