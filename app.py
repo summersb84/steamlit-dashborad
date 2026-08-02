@@ -59,6 +59,10 @@ FROM Invoice
 start = pd.to_datetime(kpi.start_date[0]).strftime("%Y-%m-%d")
 end = pd.to_datetime(kpi.end_date[0]).strftime("%Y-%m-%d")
 
+st.write("")
+st.write("")
+
+
 st.markdown(
     f"""
     <div style='font-size:14px; color:gray;'>
@@ -67,6 +71,7 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
 
 col1,col2,col3 = st.columns(3)
 
@@ -86,7 +91,7 @@ col3.metric(
     kpi.customers[0]
 )
 
-
+st.divider()
 
 # ------------------
 # 월별 매출
