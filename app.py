@@ -210,43 +210,27 @@ insight_text = ""
 
 for _, row in recent_4m.iterrows():
 
-    # 첫 번째 월은 MoM 없음
     if pd.isna(row["mom"]):
         insight_text += (
             f"- {row['month']} : "
-            f"${row['revenue']:,.0f}<br>"
+            f"${row['revenue']:,.0f}\n"
         )
     else:
-        if row["mom"] >= 0:
-            icon = "▲"
-        else:
-            icon = "▼"
+        icon = "▲" if row["mom"] >= 0 else "▼"
 
         insight_text += (
             f"- {row['month']} : "
             f"${row['revenue']:,.0f} "
-            f"({icon} {abs(row['mom']):.1f}%)<br>"
+            f"({icon} {abs(row['mom']):.1f}%)\n"
         )
 
 
-st.markdown(
+st.info(
 f"""
-<div style="
-padding:8px;
-border-radius:8px;
-">
-
-<span style="font-size:15px; font-weight:bold;">
-📊 최근 4개월 매출 현황
-</span>
-
-<br><br>
+📊 **최근 4개월 매출 현황**
 
 {insight_text}
-
-</div>
-""",
-unsafe_allow_html=True
+"""
 )
 
 
