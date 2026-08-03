@@ -570,7 +570,8 @@ st.divider()
 # 장르별 월별 판매 추이 (TOP5)
 # ------------------
 
-st.subheader("장르별 월별 판매 추이 (TOP5)")
+st.subheader("장르별 월별 판매 순위 변화")
+
 
 query_genre_rank = """
 
@@ -590,7 +591,6 @@ JOIN Track t
 JOIN Genre g
     ON t.GenreId = g.GenreId
 
-
 GROUP BY
     Month,
     Genre
@@ -608,6 +608,10 @@ df_genre_month = pd.read_sql(
 )
 
 
+# ==========================
+# 월별 순위 계산
+# ==========================
+
 df_rank = df_genre_month.copy()
 
 
@@ -621,14 +625,14 @@ df_rank["Rank"] = (
     .astype(int)
 )
 
-df_top5 = (
-    df_rank[
-        df_rank["Rank"] <= 5
-    ]
-)
+
+
+# ==========================
+# Ranking Matrix 생성
+# ==========================
 
 rank_table = (
-    df_top5
+    df_rank
     .pivot(
         index="Genre",
         columns="Month",
@@ -637,23 +641,103 @@ rank_table = (
     .reset_index()
 )
 
+
+
+# ==========================
+# 최근월 기준 정렬
+# ==========================
+
 months = sorted(
-    df_top5["Month"].unique()
+    df_rank["Month"].unique()
 )
 
 
 latest_month = months[-1]
-previous_month = months[-2]
 
 
-rank_table["변화"] = (
-    rank_table[previous_month]
-    -
-    rank_table[latest_month]
+current_rank = (
+    df_rank[
+        df_rank["Month"] == latest_month
+    ][
+        ["Genre", "Rank"]
+    ]
+    .rename(
+        columns={
+            "Rank":"현재순위"
+        }
+    )
 )
 
+
+rank_table = (
+    rank_table
+    .merge(
+        current_rank,
+        on="Genre"
+    )
+    .sort_values(
+        "현재순위"
+    )
+)
+
+
+
+# ==========================
+# 순위 변화 계산
+# ==========================
+
+if len(months) >= 2:
+
+    previous_month = months[-2]
+
+
+    rank_change = (
+        df_rank[
+            df_rank["Month"]
+            .isin(
+                [
+                    previous_month,
+                    latest_month
+                ]
+            )
+        ]
+        .pivot(
+            index="Genre",
+            columns="Month",
+            values="Rank"
+        )
+        .reset_index()
+    )
+
+
+    rank_change["순위변화"] = (
+        rank_change[previous_month]
+        -
+        rank_change[latest_month]
+    )
+
+
+    rank_table = (
+        rank_table
+        .merge(
+            rank_change[
+                [
+                    "Genre",
+                    "순위변화"
+                ]
+            ],
+            on="Genre"
+        )
+    )
+
+
+
+# ==========================
+# 테이블 출력
+# ==========================
+
 st.subheader(
-    "🏆 월별 장르 매출 순위 TOP5 변화"
+    "🏆 월별 장르 매출 순위 변화"
 )
 
 
@@ -674,7 +758,9 @@ def highlight_rank(value):
 styled_rank = (
     rank_table
     .style
-    .map(highlight_rank)
+    .applymap(
+        highlight_rank
+    )
 )
 
 
@@ -684,56 +770,56 @@ st.dataframe(
     hide_index=True
 )
 
+st.write("")
+st.write("")
+
 st.subheader(
     "💡 Insight"
 )
 
 
-latest = (
-    df_top5[
-        df_top5["Month"] == latest_month
+# 최근 1위 장르
+
+top_genre = (
+    df_rank[
+        df_rank["Month"] == latest_month
     ]
     .sort_values("Rank")
+    .iloc[0]["Genre"]
 )
-
-
-# 1위 장르
-
-top_genre = latest.iloc[0]["Genre"]
 
 
 st.info(
     f"""
     📌 {latest_month} 기준 
-    **{top_genre}** 장르가 매출 1위를 기록했습니다.
+    **{top_genre}** 장르가 가장 높은 매출을 기록했습니다.
     """
 )
 
 
+
 # 상승 장르
-
-rank_table["변화"] = rank_table["변화"].fillna(0)
-
 
 up = (
     rank_table
     .sort_values(
-        "변화",
+        "순위변화",
         ascending=False
     )
     .iloc[0]
 )
 
 
-if up["변화"] > 0:
+if up["순위변화"] > 0:
 
     st.success(
         f"""
         📈 **{up['Genre']}**
         장르는 최근 기간 대비 
-        {int(up['변화'])}단계 상승했습니다.
+        {int(up['순위변화'])}단계 상승했습니다.
         """
     )
+
 
 
 # 하락 장르
@@ -741,179 +827,20 @@ if up["변화"] > 0:
 down = (
     rank_table
     .sort_values(
-        "변화"
+        "순위변화"
     )
     .iloc[0]
 )
 
 
-if down["변화"] < 0:
+if down["순위변화"] < 0:
 
     st.warning(
         f"""
         📉 **{down['Genre']}**
         장르는 최근 기간 대비 
-        {abs(int(down['변화']))}단계 하락했습니다.
+        {abs(int(down['순위변화']))}단계 하락했습니다.
         """
     )
-
-st.write("")
-st.write("")
-
-# ------------------
-# 장르별 월별 판매순위 TOP5
-# ------------------
-
-st.subheader("장르별 월별 판매순위 TOP5")
-
-
-# month, genre, sales 컬럼 존재
-
-rank_df = (
-    df.groupby(["월", "장르"])["판매량"]
-      .sum()
-      .reset_index()
-)
-
-rank_df["순위"] = (
-    rank_df.groupby("월")["판매량"]
-            .rank(
-                ascending=False,
-                method="dense"
-            )
-            .astype(int)
-)
-
-rank_table = (
-    rank_df
-    .pivot(
-        index="장르",
-        columns="월",
-        values="순위"
-    )
-    .reset_index()
-)
-
-
-months = sorted(
-    rank_df["월"].unique()
-)
-
-last_month = months[-1]
-prev_month = months[-2]
-
-
-rank_table["변화"] = (
-    rank_table[prev_month]
-    -
-    rank_table[last_month]
-)
-
-
-def rank_style(val):
-
-    if isinstance(val, int):
-
-        if val == 1:
-            return "background-color:#FFD700;"
-
-        elif val == 2:
-            return "background-color:#C0C0C0;"
-
-        elif val == 3:
-            return "background-color:#CD7F32;"
-
-    return ""
-
-
-styled_rank = (
-    rank_table
-    .style
-    .applymap(rank_style)
-)
-
-
-st.subheader("📊 월별 판매순위 TOP5 변화")
-
-st.dataframe(
-    styled_rank,
-    use_container_width=True,
-    hide_index=True
-)
-
-
-st.write("")
-st.write("")
-
-
-# ------------------
-# 최근 월 순위 변동 Insight
-# ------------------
-
-latest_month = genre_rank["month"].max()
-
-prev_month = (
-    genre_rank[genre_rank["month"] < latest_month]["month"]
-    .max()
-)
-
-latest_rank = (
-    genre_rank[genre_rank["month"] == latest_month]
-    [["genre", "rank"]]
-    .rename(columns={"rank": "current_rank"})
-)
-
-prev_rank = (
-    genre_rank[genre_rank["month"] == prev_month]
-    [["genre", "rank"]]
-    .rename(columns={"rank": "prev_rank"})
-)
-
-rank_change = latest_rank.merge(
-    prev_rank,
-    on="genre",
-    how="inner"
-)
-
-# +면 순위 상승
-rank_change["change"] = (
-    rank_change["prev_rank"]
-    - rank_change["current_rank"]
-)
-
-rank_change["abs_change"] = rank_change["change"].abs()
-
-top3 = (
-    rank_change
-    .sort_values("abs_change", ascending=False)
-    .head(3)
-)
-
-
-insight_text = ""
-
-for _, row in top3.iterrows():
-
-    if row["change"] > 0:
-        icon = "▲"
-    elif row["change"] < 0:
-        icon = "▼"
-    else:
-        icon = "➜"
-
-    insight_text += (
-        f"- {row['genre']} : "
-        f"{int(row['prev_rank'])}위 → "
-        f"{int(row['current_rank'])}위 "
-        f"({icon}{abs(int(row['change']))})\n"
-    )
-
-st.info(
-f"""
-📊 **최근 월 순위 변동 TOP3**
-
-{insight_text}
-"""
-)
 
 st.divider()
