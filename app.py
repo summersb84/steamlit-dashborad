@@ -755,11 +755,19 @@ def highlight_rank(value):
     return ""
 
 
+rank_columns = (
+    rank_table
+    .columns
+    .drop("Genre")
+)
+
+
 styled_rank = (
     rank_table
     .style
-    .applymap(
-        highlight_rank
+    .map(
+        highlight_rank,
+        subset=rank_columns
     )
 )
 
