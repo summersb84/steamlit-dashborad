@@ -23,47 +23,31 @@ def get_connection():
 conn = get_connection()
 
 
-
 st.markdown(
-    """
-    <div style="
-        background-color: #f8f9fa;
-        padding: 16px 20px;
-        border-radius: 8px;
-        border: 1px solid #e9ecef;
-        font-size: 13px; /* 기본 본문 글자 크기 (필요 시 12px~14px로 조절) */
-        line-height: 1.6;
-        color: #333333;
-    ">
+    """<div style="background-color: #f8f9fa; padding: 16px 20px; border-radius: 8px; border: 1px solid #e9ecef; font-size: 13px; line-height: 1.6; color: #333333;">
         <div style="margin-bottom: 10px;">
             <span style="font-size: 15px; font-weight: bold; color: #111111;">📌 Dashboard 목적</span><br>
             본 Dashboard는 데이터 분석에서 화면 작성까지 일련의 흐름을 구성해 보고자 작성한 내용입니다.
         </div>
-
         <div style="margin-bottom: 10px;">
             <span style="font-size: 15px; font-weight: bold; color: #111111;">🛠️ 환경 구성</span><br>
             • 데이터 출처 : Chinook Database<br>
             • 분석 도구 : Python, Streamlit, SQLite
         </div>
-
         <div style="margin-bottom: 10px;">
             <span style="font-size: 15px; font-weight: bold; color: #111111;">👤 작성자 정보</span><br>
             • 이름 : 박승배<br>
             • Mail : summersb84@gmail.com
         </div>
-
         <div style="margin-bottom: 10px;">
             <span style="font-size: 15px; font-weight: bold; color: #111111;">📊 분석 내용</span><br>
             음원 판매 데이터를 기반으로, 매출, 고객, 상품 성과를 분석하여 주요 비즈니스 지표를 확인하고 데이터 기반 의사결정을 지원합니다.
         </div>
-
-        <hr style="margin: 12px 0; border: 0; border-top: 1px solid #de2e2e2;">
-
+        <hr style="margin: 12px 0; border: 0; border-top: 1px solid #cccccc;">
         <div style="font-size: 11px; color: #6c757d;">
             Created : 2026-08-02 | Version : v0.8 | Last Updated : 2026-08-03
         </div>
-    </div>
-    """,
+    </div>""",
     unsafe_allow_html=True
 )
 
