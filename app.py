@@ -1,26 +1,3 @@
-import streamlit as st
-import pandas as pd
-import sqlite3
-import plotly.express as px
-
-# ------------------
-# 1. 페이지 및 DB 연결 설정
-# ------------------
-st.set_page_config(
-    page_title="Music Store BI Dashboard",
-    page_icon="🎵",
-    layout="wide"
-)
-
-@st.cache_resource
-def get_connection():
-    return sqlite3.connect(
-        "data/Chinook.db",
-        check_same_thread=False
-    )
-
-conn = get_connection()
-
 
 st.markdown(
     """
@@ -48,7 +25,7 @@ st.markdown(
     주요 비즈니스 지표를 확인하고 데이터 기반 의사결정을 지원합니다.<br><br>
 
     Created : 2026-08-02<br>
-    Version : v0.7<br>
+    Version : v0.8<br>
     Last Updated : 2026-08-03<br>
     </div>
     """,
@@ -57,6 +34,32 @@ st.markdown(
 
 
 st.markdown("<br>", unsafe_allow_html=True)
+
+
+
+import streamlit as st
+import pandas as pd
+import sqlite3
+import plotly.express as px
+
+# ------------------
+# 1. 페이지 및 DB 연결 설정
+# ------------------
+st.set_page_config(
+    page_title="Music Store BI Dashboard",
+    page_icon="🎵",
+    layout="wide"
+)
+
+@st.cache_resource
+def get_connection():
+    return sqlite3.connect(
+        "data/Chinook.db",
+        check_same_thread=False
+    )
+
+conn = get_connection()
+
 
 
 # ------------------
@@ -92,6 +95,28 @@ if selected_country != "ALL":
 # ------------------
 st.title("🎵 Chinook Music Store BI Dashboard")
 st.markdown("음원 판매, 고객, 장르별 성과 분석 대시보드입니다.")
+
+# ------------------
+# 집계 날짜 표시
+# ------------------
+date_range_query = f"""
+    SELECT 
+        MIN(date(i.InvoiceDate)) as min_date,
+        MAX(date(i.InvoiceDate)) as max_date
+    FROM Invoice i
+    {where_clause}
+"""
+date_df = run_query(date_range_query, params)
+
+min_date = date_df["min_date"].iloc[0]
+max_date = date_df["max_date"].iloc[0]
+
+# 서브헤더 및 캡션 형태로 깔끔하게 표시
+if min_date and max_date:
+    st.caption(f"📅 **데이터 집계 기간:** {min_date} ~ {max_date}")
+else:
+    st.caption("📅 **데이터 집계 기간:** 데이터 없음")
+
 st.divider()
 
 # ------------------
@@ -113,10 +138,10 @@ total_customers = kpi_df["total_customers"].iloc[0] or 0
 avg_order_val = (total_revenue / total_orders) if total_orders > 0 else 0
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("총 매출액", f"${total_revenue:,.2f}")
+col1.metric("총 매출액", f"${total_revenue:,.1f}")
 col2.metric("총 주문 건수", f"{total_orders:,} 건")
 col3.metric("구매 고객 수", f"{total_customers:,} 명")
-col4.metric("평균 주문 금액", f"${avg_order_val:,.2f}")
+col4.metric("평균 주문 금액", f"${avg_order_val:,.1f}")
 
 st.divider()
 
