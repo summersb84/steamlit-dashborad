@@ -562,3 +562,85 @@ with col2:
         fig,
         use_container_width=True
     )
+
+
+st.divider()
+
+# ------------------
+# 장르별 월별 판매 추이 (TOP5)
+# ------------------
+
+st.subheader("장르별 월별 판매 추이 (TOP5)")
+
+
+genre_month = load_data("""
+WITH top_genre AS (
+
+    SELECT
+        g.GenreId,
+        g.Name AS genre,
+        SUM(il.Quantity) AS total_sales
+
+    FROM InvoiceLine il
+    JOIN Track t
+        ON il.TrackId = t.TrackId
+    JOIN Genre g
+        ON t.GenreId = g.GenreId
+
+    GROUP BY g.GenreId, g.Name
+    ORDER BY total_sales DESC
+    LIMIT 5
+
+)
+
+SELECT
+
+    strftime('%Y-%m', i.InvoiceDate) AS month,
+    g.Name AS genre,
+    SUM(il.Quantity) AS sales
+
+FROM InvoiceLine il
+
+JOIN Invoice i
+    ON il.InvoiceId = i.InvoiceId
+
+JOIN Track t
+    ON il.TrackId = t.TrackId
+
+JOIN Genre g
+    ON t.GenreId = g.GenreId
+
+JOIN top_genre tg
+    ON g.GenreId = tg.GenreId
+
+GROUP BY month, genre
+ORDER BY month, sales DESC
+
+""")
+
+
+fig = px.line(
+    genre_month,
+    x="month",
+    y="sales",
+    color="genre",
+    markers=True,
+    title="Top 5 Genre Monthly Sales Trend"
+)
+
+
+fig.update_layout(
+    yaxis=dict(
+        rangemode="tozero"
+    ),
+    legend_title="Genre"
+)
+
+
+st.plotly_chart(
+    fig,
+    use_container_width=True
+)
+
+
+st.divider()
