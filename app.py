@@ -272,10 +272,50 @@ artist_query = f"""
 """
 artist_df = run_query(artist_query, params)
 
-# [핵심] 인덱스를 1부터 시작하도록 설정
-artist_df.index = range(1, len(artist_df) + 1)
+if not artist_df.empty:
+    # 1부터 시작하는 인덱스로 변경
+    artist_df.index = range(1, len(artist_df) + 1)
 
-st.dataframe(
-    artist_df.style.format({"TotalRevenue": "${:,.2f}", "TracksSold": "{:,}"}),
-    use_container_width=True
-)
+    # 테이블 출력 (컬럼명 한글 화 및 포맷팅)
+    st.dataframe(
+        artist_df.rename(columns={
+            "Artist": "아티스트명",
+            "TracksSold": "판매 트랙 수",
+            "TotalRevenue": "총 매출액"
+        }).style.format({
+            "총 매출액": "${:,.2f}",
+            "판매 트랙 수": "{:,} 개"
+        }),
+        use_container_width=True
+    )
+
+    # ------------------
+    # [신규] 아티스트 분석 인사이트 섹션
+    # ------------------
+    # 전체 매출 대비 Top 10 기여도를 계산하기 위한 전체 아티스트 총 매출 조회
+    total_artist_sales_query = f"""
+        SELECT SUM(il.UnitPrice * il.Quantity) as GrandTotal
+        FROM InvoiceLine il
+        JOIN Invoice i ON il.InvoiceId = i.InvoiceId
+        {where_clause}
+    """
+    grand_total_df = run_query(total_artist_sales_query, params)
+    grand_total_sales = grand_total_df["GrandTotal"].iloc[0] or 1
+
+    # 지표 산출
+    top_artist_name = artist_df.iloc[0]["Artist"]
+    top_artist_sales = artist_df.iloc[0]["TotalRevenue"]
+    top_artist_tracks = artist_df.iloc[0]["TracksSold"]
+    
+    top10_total_sales = artist_df["TotalRevenue"].sum()
+    top10_share = (top10_total_sales / grand_total_sales) * 100
+    top1_share_in_top10 = (top_artist_sales / top10_total_sales) * 100
+
+    st.info(f"""
+    💡 **아티스트 판매 인사이트**
+    * **최고 실적 아티스트:** **{top_artist_name}**가 **${top_artist_sales:,.2f}** ({top_artist_tracks:,}개 트랙 판매)의 매출을 올려 **1위**를 기록했습니다.
+    * **Top 10 기여도:** 상위 10개 아티스트가 전체 매출의 **{top10_share:.1f}%**를 차지하고 있습니다.
+    * **집중도 분석:** 1위 아티스트({top_artist_name})는 Top 10 전체 매출 중 **{top1_share_in_top10:.1f}%**를 차지하는 대표 핵심 아티스트입니다.
+    """)
+else:
+    st.info("해당 조건의 아티스트 데이터가 없습니다.")
