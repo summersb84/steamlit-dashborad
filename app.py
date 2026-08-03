@@ -643,4 +643,126 @@ st.plotly_chart(
 )
 
 
+st.write("")
+st.write("")
+
+# ------------------
+# 장르별 월별 판매순위 TOP5
+# ------------------
+
+st.subheader("장르별 월별 판매순위 TOP5")
+
+
+genre_rank = load_data("""
+WITH monthly_sales AS (
+
+    SELECT
+        strftime('%Y-%m', i.InvoiceDate) AS month,
+        g.Name AS genre,
+        SUM(il.Quantity) AS sales
+
+    FROM InvoiceLine il
+    JOIN Invoice i
+        ON il.InvoiceId = i.InvoiceId
+    JOIN Track t
+        ON il.TrackId = t.TrackId
+    JOIN Genre g
+        ON t.GenreId = g.GenreId
+
+    GROUP BY month, genre
+
+),
+
+ranked AS (
+
+    SELECT
+        month,
+        genre,
+        sales,
+
+        RANK() OVER(
+            PARTITION BY month
+            ORDER BY sales DESC
+        ) AS rank
+
+    FROM monthly_sales
+
+)
+
+SELECT
+    month,
+    genre,
+    sales,
+    rank
+
+FROM ranked
+
+WHERE rank <= 5
+
+ORDER BY month, rank
+
+""")
+
+
+fig = px.line(
+    genre_rank,
+    x="month",
+    y="rank",
+    color="genre",
+    markers=True,
+    text="rank",
+    title="Monthly Genre Ranking (Top 5)"
+)
+
+fig.update_traces(
+    textposition="top center"
+)
+
+fig.update_layout(
+
+    yaxis=dict(
+        title="Rank",
+        autorange="reversed",   # 1위가 위로
+        dtick=1
+    ),
+
+    xaxis_title="Month",
+    legend_title="Genre"
+
+)
+
+st.plotly_chart(
+    fig,
+    use_container_width=True
+)
+
+st.write("")
+st.write("")
+
+insight_text = ""
+
+for _, row in top3.iterrows():
+
+    if row["change"] > 0:
+        icon = "▲"
+    elif row["change"] < 0:
+        icon = "▼"
+    else:
+        icon = "➜"
+
+    insight_text += (
+        f"- {row['genre']} : "
+        f"{int(row['prev_rank'])}위 → "
+        f"{int(row['current_rank'])}위 "
+        f"({icon}{abs(int(row['change']))})\n"
+    )
+
+st.info(
+f"""
+📊 **최근 월 순위 변동 TOP3**
+
+{insight_text}
+"""
+)
+
 st.divider()
