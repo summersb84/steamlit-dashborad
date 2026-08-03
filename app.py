@@ -255,6 +255,7 @@ with row1_col2:
 st.divider()
 st.subheader("🏆 Top 10 인기 아티스트")
 
+# [기존 쿼리 & 테이블 출력 동일]
 artist_query = f"""
     SELECT 
         ar.Name as Artist,
@@ -273,10 +274,8 @@ artist_query = f"""
 artist_df = run_query(artist_query, params)
 
 if not artist_df.empty:
-    # 1부터 시작하는 인덱스로 변경
     artist_df.index = range(1, len(artist_df) + 1)
 
-    # 테이블 출력 (컬럼명 한글 화 및 포맷팅)
     st.dataframe(
         artist_df.rename(columns={
             "Artist": "아티스트명",
@@ -289,10 +288,7 @@ if not artist_df.empty:
         use_container_width=True
     )
 
-    # ------------------
-    # [신규] 아티스트 분석 인사이트 섹션
-    # ------------------
-    # 전체 매출 대비 Top 10 기여도를 계산하기 위한 전체 아티스트 총 매출 조회
+    # 전체 기간 인사이트
     total_artist_sales_query = f"""
         SELECT SUM(il.UnitPrice * il.Quantity) as GrandTotal
         FROM InvoiceLine il
@@ -302,20 +298,92 @@ if not artist_df.empty:
     grand_total_df = run_query(total_artist_sales_query, params)
     grand_total_sales = grand_total_df["GrandTotal"].iloc[0] or 1
 
-    # 지표 산출
     top_artist_name = artist_df.iloc[0]["Artist"]
     top_artist_sales = artist_df.iloc[0]["TotalRevenue"]
     top_artist_tracks = artist_df.iloc[0]["TracksSold"]
-    
     top10_total_sales = artist_df["TotalRevenue"].sum()
     top10_share = (top10_total_sales / grand_total_sales) * 100
-    top1_share_in_top10 = (top_artist_sales / top10_total_sales) * 100
 
     st.info(f"""
-    💡 **아티스트 판매 인사이트**
+    💡 **전체 기간 아티스트 판매 인사이트**
     * **최고 실적 아티스트:** **{top_artist_name}**가 **${top_artist_sales:,.2f}** ({top_artist_tracks:,}개 트랙 판매)의 매출을 올려 **1위**를 기록했습니다.
     * **Top 10 기여도:** 상위 10개 아티스트가 전체 매출의 **{top10_share:.1f}%**를 차지하고 있습니다.
-    * **집중도 분석:** 1위 아티스트({top_artist_name})는 Top 10 전체 매출 중 **{top1_share_in_top10:.1f}%**를 차지하는 대표 핵심 아티스트입니다.
     """)
-else:
-    st.info("해당 조건의 아티스트 데이터가 없습니다.")
+
+    # ------------------
+    # [신규] 하위 분석: 최근 3개월 인기 아티스트 분석
+    # ------------------
+    with st.expander("📌 최근 3개월 인기 아티스트 트렌드 및 하위 분석 보기", expanded=False):
+        # 1. DB 기준 최신 날짜 및 최신 3개월 시작 날짜 계산
+        recent_date_query = f"""
+            SELECT 
+                MAX(i.InvoiceDate) as max_date,
+                date(MAX(i.InvoiceDate), '-3 months') as start_3m_date
+            FROM Invoice i
+            {where_clause}
+        """
+        recent_date_df = run_query(recent_date_query, params)
+        max_date_str = recent_date_df["max_date"].iloc[0]
+        start_3m_str = recent_date_df["start_3m_date"].iloc[0]
+
+        st.markdown(f"**🗓️ 분석 대상 기간:** `{start_3m_str}` ~ `{max_date_str}` (최근 3개월)")
+
+        # 2. 최근 3개월 기준 Top 5 아티스트 쿼리
+        recent_where = f"WHERE i.InvoiceDate >= '{start_3m_str}'"
+        if selected_country != "ALL":
+            recent_where += " AND i.BillingCountry = ?"
+
+        recent_artist_query = f"""
+            SELECT 
+                ar.Name as Artist,
+                COUNT(il.TrackId) as TracksSold,
+                SUM(il.UnitPrice * il.Quantity) as TotalRevenue
+            FROM InvoiceLine il
+            JOIN Invoice i ON il.InvoiceId = i.InvoiceId
+            JOIN Track t ON il.TrackId = t.TrackId
+            JOIN Album al ON t.AlbumId = al.AlbumId
+            JOIN Artist ar ON al.ArtistId = ar.ArtistId
+            {recent_where}
+            GROUP BY ar.ArtistId
+            ORDER BY TotalRevenue DESC
+            LIMIT 5
+        """
+        recent_artist_df = run_query(recent_artist_query, params)
+
+        if not recent_artist_df.empty:
+            recent_artist_df.index = range(1, len(recent_artist_df) + 1)
+            
+            # 좌우 2컬럼 레이아웃 (좌: 최근 Top 5 테이블 / 우: 단기 트렌드 인사이트)
+            sub_col1, sub_col2 = st.columns([3, 2])
+
+            with sub_col1:
+                st.caption("🔥 최근 3개월 매출 Top 5 아티스트")
+                st.dataframe(
+                    recent_artist_df.rename(columns={
+                        "Artist": "아티스트명",
+                        "TracksSold": "판매 트랙 수",
+                        "TotalRevenue": "총 매출액"
+                    }).style.format({
+                        "총 매출액": "${:,.2f}",
+                        "판매 트랙 수": "{:,} 개"
+                    }),
+                    use_container_width=True
+                )
+
+            with sub_col2:
+                recent_top1 = recent_artist_df.iloc[0]["Artist"]
+                recent_top1_sales = recent_artist_df.iloc[0]["TotalRevenue"]
+                recent_top_tracks = recent_artist_df.iloc[0]["TracksSold"]
+                
+                # 전체 1위와 최근 3개월 1위 비교
+                is_same_top = (top_artist_name == recent_top1)
+                comparison_text = "전체 기간 1위 아티스트가 최근 3개월 동안도 인기 상위를 유지하고 있습니다." if is_same_top else f"전체 기간 1위({top_artist_name})와 달리, 최근 3개월은 **{recent_top1}**가 단기 급상승 1위를 차지했습니다."
+
+                st.caption("💡 최근 3개월 주요 포인트")
+                st.success(f"""
+                * **최근 3개월 1위:** **{recent_top1}** (${recent_top1_sales:,.2f})
+                * **단기 트렌드:** {comparison_text}
+                * **운영 제언:** 최근 3개월 급상승 아티스트의 관련 앨범 메인 노출 강화 추천.
+                """)
+        else:
+            st.warning("해당 기간 내 구매 데이터가 존재하지 않습니다.")
