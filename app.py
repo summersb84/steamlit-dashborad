@@ -67,7 +67,6 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.markdown("<br>", unsafe_allow_html=True)
 
 # ------------------
 # 2. 데이터 쿼리 함수 (데이터 캐싱 처리)
