@@ -28,9 +28,9 @@ st.markdown(
     """
     <div style="
         background-color:#f8f9fa;
-        padding:15px;
+        padding:12px;
         border-radius:8px;
-        font-size:14px;
+        font-size:12px;
         line-height:1.6;
     ">
     <b>Dashboard 목적</b><br>
