@@ -164,7 +164,8 @@ with row1_col1:
         LIMIT 10
     """
     genre_df = run_query(genre_query, params)
-    
+
+    # 10개 차트 시각화
     fig_genre = px.bar(
         genre_df,
         x="TotalSales",
@@ -177,6 +178,26 @@ with row1_col1:
     )
     fig_genre.update_layout(yaxis={'categoryorder':'total ascending'}, showlegend=False)
     st.plotly_chart(fig_genre, use_container_width=True)
+
+    # ------------------
+    # [신규] 인사이트 섹션 (st.info 또는 st.expander 활용)
+    # ------------------
+    if not genre_df.empty:
+        # 데이터 자동 계산
+        total_genre_sales = genre_df["TotalSales"].sum()
+        top_1_genre = genre_df.iloc[0]["Genre"]
+        top_1_sales = genre_df.iloc[0]["TotalSales"]
+        top_1_share = (top_1_sales / total_genre_sales) * 100
+        
+        top_3_sales = genre_df.head(3)["TotalSales"].sum()
+        top_3_share = (top_3_sales / total_genre_sales) * 100
+        
+        st.info(f"""
+        💡 **장르 분석 인사이트**
+        * **1위 장르:** **{top_1_genre}** 장르가 전체 매출의 **{top_1_share:.1f}%** (${top_1_sales:,.2f})를 차지하며 가장 높습니다.
+        * **매출 집중도:** 상위 3개 장르가 전체 매출의 **{top_3_share:.1f}%**를 견인하고 있습니다.
+        * **액션 플랜:** {top_1_genre} 중심의 메인 큐레이션 타겟팅 및 신규 트랙 확보 전략이 유효합니다.
+        """)
 
 with row1_col2:
     st.subheader("📈 월별 매출 추이")
@@ -200,6 +221,33 @@ with row1_col2:
         markers=True
     )
     st.plotly_chart(fig_trend, use_container_width=True)
+
+    # ------------------
+    # [신규] 월별 매출 인사이트 섹션
+    # ------------------
+    if not trend_df.empty and len(trend_df) > 1:
+        # 데이터 자동 계산
+        avg_monthly_rev = trend_df["MonthlyRevenue"].mean()
+        
+        # 최고 매출 월 / 최저 매출 월
+        max_row = trend_df.loc[trend_df["MonthlyRevenue"].idxmax()]
+        min_row = trend_df.loc[trend_df["MonthlyRevenue"].idxmin()]
+        
+        # 최근 월 매출 및 전월 대비 변동률 (MoM)
+        last_month_rev = trend_df.iloc[-1]["MonthlyRevenue"]
+        prev_month_rev = trend_df.iloc[-2]["MonthlyRevenue"]
+        mom_growth = ((last_month_rev - prev_month_rev) / prev_month_rev) * 100 if prev_month_rev > 0 else 0
+        
+        mom_icon = "🔺" if mom_growth >= 0 else "🔻"
+        
+        st.info(f"""
+        💡 **월별 매출 분석 인사이트**
+        * **최고 매출 월:** **{max_row['Month']}**에 **${max_row['MonthlyRevenue']:,.2f}**로 가장 높은 실적을 기록했습니다.
+        * **평균 월 매출:** 전체 기간 동안 월평균 **${avg_monthly_rev:,.2f}**의 매출이 발생했습니다.
+        * **최근 실적 흐름:** 최근 월({trend_df.iloc[-1]['Month']}) 매출은 **${last_month_rev:,.2f}**로, 전월 대비 **{mom_growth:+.1f}%** {mom_icon} 변동했습니다.
+        """)
+    elif len(trend_df) == 1:
+        st.info("💡 **월별 매출 분석 인사이트:** 단일 월 데이터만 존재하는 상태입니다.")
 
 # ------------------
 # 7. 상위 아티스트 / 상세 데이터 테이블
