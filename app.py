@@ -4,6 +4,25 @@ import sqlite3
 import plotly.express as px
 
 
+# ------------------
+# 1. 페이지 및 DB 연결 설정
+# ------------------
+st.set_page_config(
+    page_title="Music Store BI Dashboard",
+    page_icon="🎵",
+    layout="wide"
+)
+
+@st.cache_resource
+def get_connection():
+    return sqlite3.connect(
+        "data/Chinook.db",
+        check_same_thread=False
+    )
+
+conn = get_connection()
+
+
 
 st.markdown(
     """
@@ -40,29 +59,6 @@ st.markdown(
 
 
 st.markdown("<br>", unsafe_allow_html=True)
-
-
-
-
-# ------------------
-# 1. 페이지 및 DB 연결 설정
-# ------------------
-st.set_page_config(
-    page_title="Music Store BI Dashboard",
-    page_icon="🎵",
-    layout="wide"
-)
-
-@st.cache_resource
-def get_connection():
-    return sqlite3.connect(
-        "data/Chinook.db",
-        check_same_thread=False
-    )
-
-conn = get_connection()
-
-
 
 # ------------------
 # 2. 데이터 쿼리 함수 (데이터 캐싱 처리)
