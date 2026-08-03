@@ -311,24 +311,28 @@ if not artist_df.empty:
     """)
 
     # ------------------
-    # [신규] 하위 분석: 최근 3개월 인기 아티스트 분석
+    # [수정] 하위 분석: 최근 3개월(월 단위) 인기 아티스트 분석
     # ------------------
-    with st.expander("📌 최근 3개월 인기 아티스트 트렌드 및 하위 분석 보기", expanded=False):
-        # 1. DB 기준 최신 날짜 및 최신 3개월 시작 날짜 계산
+    with st.expander("📌 최근 3개월(월 단위) 인기 아티스트 트렌드 및 하위 분석 보기", expanded=False):
+        # 1. DB 기준 최신 날짜 및 최신 월 기준 3개월 전 시작일(월 시작일) 계산
         recent_date_query = f"""
             SELECT 
                 MAX(i.InvoiceDate) as max_date,
-                date(MAX(i.InvoiceDate), '-3 months') as start_3m_date
+                date(MAX(i.InvoiceDate), 'start of month', '-2 months') as start_3m_month
             FROM Invoice i
             {where_clause}
         """
         recent_date_df = run_query(recent_date_query, params)
         max_date_str = recent_date_df["max_date"].iloc[0]
-        start_3m_str = recent_date_df["start_3m_date"].iloc[0]
+        start_3m_str = recent_date_df["start_3m_month"].iloc[0]
 
-        st.markdown(f"**🗓️ 분석 대상 기간:** `{start_3m_str}` ~ `{max_date_str}` (최근 3개월)")
+        # 월 표시 형식 추출 (예: 2013-10 ~ 2013-12)
+        start_month_fmt = start_3m_str[:7] if start_3m_str else ""
+        max_month_fmt = max_date_str[:7] if max_date_str else ""
 
-        # 2. 최근 3개월 기준 Top 5 아티스트 쿼리
+        st.markdown(f"**🗓️ 분석 대상 월:** `{start_month_fmt}` ~ `{max_month_fmt}` (월 단위 최근 3개월)")
+
+        # 2. 월 단위 최근 3개월 조건 추가 쿼리
         recent_where = f"WHERE i.InvoiceDate >= '{start_3m_str}'"
         if selected_country != "ALL":
             recent_where += " AND i.BillingCountry = ?"
@@ -353,11 +357,10 @@ if not artist_df.empty:
         if not recent_artist_df.empty:
             recent_artist_df.index = range(1, len(recent_artist_df) + 1)
             
-            # 좌우 2컬럼 레이아웃 (좌: 최근 Top 5 테이블 / 우: 단기 트렌드 인사이트)
             sub_col1, sub_col2 = st.columns([3, 2])
 
             with sub_col1:
-                st.caption("🔥 최근 3개월 매출 Top 5 아티스트")
+                st.caption(f"🔥 최근 3개월({start_month_fmt} ~ {max_month_fmt}) 매출 Top 5 아티스트")
                 st.dataframe(
                     recent_artist_df.rename(columns={
                         "Artist": "아티스트명",
@@ -375,7 +378,6 @@ if not artist_df.empty:
                 recent_top1_sales = recent_artist_df.iloc[0]["TotalRevenue"]
                 recent_top_tracks = recent_artist_df.iloc[0]["TracksSold"]
                 
-                # 전체 1위와 최근 3개월 1위 비교
                 is_same_top = (top_artist_name == recent_top1)
                 comparison_text = "전체 기간 1위 아티스트가 최근 3개월 동안도 인기 상위를 유지하고 있습니다." if is_same_top else f"전체 기간 1위({top_artist_name})와 달리, 최근 3개월은 **{recent_top1}**가 단기 급상승 1위를 차지했습니다."
 
@@ -383,7 +385,7 @@ if not artist_df.empty:
                 st.success(f"""
                 * **최근 3개월 1위:** **{recent_top1}** (${recent_top1_sales:,.2f})
                 * **단기 트렌드:** {comparison_text}
-                * **운영 제언:** 최근 3개월 급상승 아티스트의 관련 앨범 메인 노출 강화 추천.
+                * **운영 제언:** 최근 3개월 급상승 아티스트 관련 프로모션 강화 추천.
                 """)
         else:
             st.warning("해당 기간 내 구매 데이터가 존재하지 않습니다.")
