@@ -32,7 +32,7 @@ st.markdown(
         <div style="margin-bottom: 10px;">
             <span style="font-size: 15px; font-weight: bold; color: #111111;">🛠️ 환경 구성</span><br>
             • 데이터 출처 : Chinook Database<br>
-            • 분석 도구 : Python, Streamlit, SQLite
+            • 분석 도구 : SQLite, Python, Streamlit, Github Action, Streamlit Cloud
         </div>
         <div style="margin-bottom: 10px;">
             <span style="font-size: 15px; font-weight: bold; color: #111111;">👤 작성자 정보</span><br>
@@ -51,6 +51,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
+st.markdown("<br>", unsafe_allow_html=True)
 
 # ------------------
 # 2. 데이터 쿼리 함수 (데이터 캐싱 처리)
@@ -381,3 +382,166 @@ if not artist_df.empty:
                 """)
         else:
             st.warning("해당 기간 내 구매 데이터가 존재하지 않습니다.")
+
+
+# ------------------
+# [신규] RFM 고객 세분화 분석 탭 추가
+# ------------------
+st.divider()
+st.header("👥 고객 RFM 세분화 및 가치 분석")
+
+# 1. RFM SQL 쿼리 (SQLite 환경 최적화)
+rfm_query = f"""
+    WITH max_date AS (
+        SELECT MAX(InvoiceDate) as ref_date FROM Invoice
+    ),
+    customer_rfm AS (
+        SELECT 
+            c.CustomerId,
+            c.FirstName || ' ' || c.LastName as CustomerName,
+            c.Country,
+            c.Email,
+            ROUND(julianday((SELECT ref_date FROM max_date)) - julianday(MAX(i.InvoiceDate))) as RecencyDays,
+            COUNT(DISTINCT i.InvoiceId) as Frequency,
+            ROUND(SUM(i.Total), 2) as Monetary
+        FROM Customer c
+        JOIN Invoice i ON c.CustomerId = i.CustomerId
+        {where_clause}
+        GROUP BY c.CustomerId
+    )
+    SELECT 
+        CustomerId,
+        CustomerName,
+        Country,
+        Email,
+        RecencyDays,
+        Frequency,
+        Monetary,
+        CASE 
+            WHEN RecencyDays <= 90 AND Frequency >= 6 AND Monetary >= 40 THEN 'VIP (Champions)'
+            WHEN RecencyDays <= 180 AND (Frequency >= 5 OR Monetary >= 38) THEN 'Loyal Customers'
+            WHEN RecencyDays > 180 AND Monetary >= 35 THEN 'At Risk (이탈 위기)'
+            ELSE 'Hibernating (휴면/관망)'
+        END as RFM_Segment
+    FROM customer_rfm
+    ORDER BY Monetary DESC
+"""
+
+rfm_df = run_query(rfm_query, params)
+
+if not rfm_df.empty:
+    # 2. 탭 구성 (Overview / Distribution / Action Plan)
+    tab1, tab2, tab3 = st.tabs(["📊 세그먼트 현황", "📈 RFM 분포 및 상관관계", "🎯 타겟팅 & 세부 고객 리스트"])
+
+    # ------------------
+    # TAB 1: 세그먼트 현황
+    # ------------------
+    with tab1:
+        col_summary1, col_summary2 = st.columns([1, 1.2])
+        
+        # 세그먼트별 요약 통계량 계산
+        segment_summary = rfm_df.groupby("RFM_Segment").agg(
+            CustomerCount=("CustomerId", "count"),
+            TotalRevenue=("Monetary", "sum"),
+            AvgMonetary=("Monetary", "mean"),
+            AvgRecency=("RecencyDays", "mean")
+        ).reset_index()
+        
+        segment_summary["RevenueShare"] = (segment_summary["TotalRevenue"] / segment_summary["TotalRevenue"].sum()) * 100
+
+        with col_summary1:
+            st.subheader("세그먼트별 고객 수 비중")
+            fig_pie = px.pie(
+                segment_summary,
+                names="RFM_Segment",
+                values="CustomerCount",
+                hole=0.4,
+                color_discrete_sequence=px.colors.qualitative.Pastel
+            )
+            fig_pie.update_traces(textinfo="percent+label")
+            st.plotly_chart(fig_pie, use_container_width=True)
+
+        with col_summary2:
+            st.subheader("세그먼트별 매출 기여도 ($)")
+            fig_bar = px.bar(
+                segment_summary,
+                x="RFM_Segment",
+                y="TotalRevenue",
+                color="RFM_Segment",
+                text_auto="$,.2f",
+                color_discrete_sequence=px.colors.qualitative.Pastel
+            )
+            fig_bar.update_layout(showlegend=False, yaxis_title="총 매출액 ($)")
+            st.plotly_chart(fig_bar, use_container_width=True)
+
+        # 비즈니스 요약 인포 박스
+        top_segment = segment_summary.sort_values(by="TotalRevenue", ascending=False).iloc[0]
+        st.info(f"""
+        💡 **RFM 핵심 요약:**
+        * 매출 기여도가 가장 높은 그룹은 **'{top_segment['RFM_Segment']}'** 그룹으로, 전체 매출의 **{top_segment['RevenueShare']:.1f}%** (${top_segment['TotalRevenue']:,.2f})를 차지하고 있습니다.
+        * 이탈 위기(`At Risk`) 세그먼트의 재활성화(Re-activation) 프로모션 집행 시 기대 매출 방어 효과가 가장 클 것으로 산출됩니다.
+        """)
+
+    # ------------------
+    # TAB 2: RFM 분포 분석
+    # ------------------
+    with tab2:
+        st.subheader("Recency vs Monetary (구매 최근성 vs 구매 금액)")
+        st.caption("우상단에 위치할수록 높은 LTV를 가진 핵심 고객군입니다.")
+        
+        fig_scatter = px.scatter(
+            rfm_df,
+            x="RecencyDays",
+            y="Monetary",
+            size="Frequency",
+            color="RFM_Segment",
+            hover_name="CustomerName",
+            hover_data=["Country", "Email"],
+            labels={"RecencyDays": "마지막 구매 후 경과일 (Recency)", "Monetary": "총 누적 구매액 ($)", "Frequency": "구매 빈도"},
+            size_max=18
+        )
+        # Recency 축 반전 (최근 구매일수록 왼쪽에 위치하게 시각적 직관 제공)
+        fig_scatter.update_xaxes(autorange="reversed")
+        st.plotly_chart(fig_scatter, use_container_width=True)
+
+    # ------------------
+    # TAB 3: 세부 고객 리스트 및 CRM 액션 제언
+    # ------------------
+    with tab3:
+        st.subheader("🎯 세그먼트별 CRM 액션 전략 및 타겟 고객 추출")
+        
+        selected_segment = st.selectbox(
+            "분석 및 추출할 고객 세그먼트를 선택하세요:",
+            options=rfm_df["RFM_Segment"].unique()
+        )
+        
+        # 선택한 세그먼트별 맞춤 전략 마크다운
+        strategies = {
+            "VIP (Champions)": "전용 프리미엄 혜택 제공, 신규 음원 선공개 알림, VIP 로열티 프로그램 운영",
+            "Loyal Customers": "교차 판매(Cross-selling) 유도, 장르 맞춤형 큐레이션 추천, 서브스크립션/부스터 쿠폰 제공",
+            "At Risk (이탈 위기)": "복귀 할인 쿠폰(Win-back Campaign) 발송, 최근 인기 장르 트렌드 레터 전달, 만족도 설문조사",
+            "Hibernating (휴면/관망)": "자동화 리타겟팅 메일 집행, 대규모 정기 세일 기간 재방문 유도"
+        }
+        
+        st.warning(f"📌 **[{selected_segment}] 맞춤 액션 플랜:** {strategies.get(selected_segment, '맞춤 프로모션 진행')}")
+        
+        # 필터링된 고객 데이터프레임
+        filtered_customers = rfm_df[rfm_df["RFM_Segment"] == selected_segment]
+        
+        st.dataframe(
+            filtered_customers[["CustomerId", "CustomerName", "Country", "Email", "RecencyDays", "Frequency", "Monetary"]]
+            .style.format({"Monetary": "${:,.2f}", "RecencyDays": "{:.0f}일", "Frequency": "{:,}회"}),
+            use_container_width=True,
+            height=300
+        )
+        
+        # CSV 다운로드 버튼 (CRM 활용 목적)
+        csv = filtered_customers.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label=f"📥 {selected_segment} 타겟 고객 리스트 (CSV) 다운로드",
+            data=csv,
+            file_name=f"rfm_target_customers_{selected_segment}.csv",
+            mime="text/csv"
+        )
+else:
+    st.write("해당 조건의 데이터가 없습니다.")
