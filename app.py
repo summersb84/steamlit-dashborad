@@ -1,3 +1,9 @@
+import streamlit as st
+import pandas as pd
+import sqlite3
+import plotly.express as px
+
+
 
 st.markdown(
     """
@@ -37,10 +43,6 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 
 
-import streamlit as st
-import pandas as pd
-import sqlite3
-import plotly.express as px
 
 # ------------------
 # 1. 페이지 및 DB 연결 설정
