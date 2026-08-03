@@ -474,14 +474,24 @@ if not rfm_df.empty:
             fig_bar.update_layout(showlegend=False, yaxis_title="총 매출액 ($)")
             st.plotly_chart(fig_bar, use_container_width=True)
 
-        # 비즈니스 요약 인포 박스
+        # 1. 비즈니스 핵심 요약 박스
         top_segment = segment_summary.sort_values(by="TotalRevenue", ascending=False).iloc[0]
-        st.info(f"""
+        st.success(f"""
         💡 **RFM 핵심 요약:**
         * 매출 기여도가 가장 높은 그룹은 **'{top_segment['RFM_Segment']}'** 그룹으로, 전체 매출의 **{top_segment['RevenueShare']:.1f}%** (${top_segment['TotalRevenue']:,.2f})를 차지하고 있습니다.
         * 이탈 위기(`At Risk`) 세그먼트의 재활성화(Re-activation) 프로모션 집행 시 기대 매출 방어 효과가 가장 클 것으로 산출됩니다.
         """)
 
+        # 2. Segment 분류 기준 안내 박스
+        st.info("""
+        📌 **RFM Segment 분류 기준 및 정의**
+        * 🏆 **VIP (Champions):** 최근 90일 이내 구매 + 6회 이상 구매 + $40 이상 지출 (최상위 가치 고객)
+        * 💙 **Loyal Customers:** 최근 180일 이내 구매 + 5회 이상 구매 또는 $38 이상 지출 (우수 고객)
+        * ⚠️ **At Risk (이탈 위기):** 마지막 구매 후 180일 초과 경과 + 과거 누적 $35 이상 지출 (케어가 필요한 고가치 고객)
+        * 💤 **Hibernating (휴면/관망):** 구매 주기가 오래되고 구매 금액 및 빈도가 낮은 관망 고객
+        
+        💡 *기준일(Anchor Date): DB 내 최종 결제일 기준 / Recency: 경과일, Frequency: 구매 건수, Monetary: 총 누적 구매액*
+        """)
     # ------------------
     # TAB 2: RFM 분포 분석
     # ------------------
