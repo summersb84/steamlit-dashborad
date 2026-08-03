@@ -272,6 +272,9 @@ artist_query = f"""
 """
 artist_df = run_query(artist_query, params)
 
+# [핵심] 인덱스를 1부터 시작하도록 설정
+artist_df.index = range(1, len(artist_df) + 1)
+
 st.dataframe(
     artist_df.style.format({"TotalRevenue": "${:,.2f}", "TracksSold": "{:,}"}),
     use_container_width=True
