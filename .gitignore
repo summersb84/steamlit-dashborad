@@ -1,0 +1,16 @@
+# Python & Virtualenv
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# Streamlit Local Secrets (가장 중요)
+.streamlit/secrets.toml
+
+# Local Large Data
+/data/raw/
+*.sqlite3
+*.db
