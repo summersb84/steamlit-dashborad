@@ -1,1 +1,2 @@
-streamlit
+streamlit>=1.32.0
+starlette<0.36.0
