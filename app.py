@@ -24,13 +24,6 @@ DB_PATH = os.path.join(BASE_DIR, "data", "Chinook.db")
 def get_connection():
     return sqlite3.connect(DB_PATH, check_same_thread=False)
 
-
-# DB 파일 존재 여부 확인 후 예외 처리
-if not os.path.exists(DB_PATH):
-    st.error(f"DB 파일을 찾을 수 없습니다: {DB_PATH}")
-    st.info(f"현재 실행 경로: {os.getcwd()}")
-    st.stop()  # 서버 Crash 방지 및 화면 출력
-
 conn = get_connection()
 
 st.markdown(
