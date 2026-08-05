@@ -13,15 +13,18 @@ st.set_page_config(
     layout="wide"
 )
 
-@st.cache_resource
+# ------------------
+# 2. DB 연결 설정
+# ------------------
+# absolute path 생성
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "data", "Chinook.db")
+
+# Connection 캐싱 대신 connection 함수 호출 또는 데이터 쿼리 캐싱(st.cache_data) 사용
 def get_connection():
-    return sqlite3.connect(
-        "data/Chinook.db",
-        check_same_thread=False
-    )
+    return sqlite3.connect(DB_PATH, check_same_thread=False)
 
 conn = get_connection()
-
 
 st.markdown(
     """<div style="background-color: #f8f9fa; padding: 16px 20px; border-radius: 8px; border: 1px solid #e9ecef; font-size: 13px; line-height: 1.6; color: #333333;">
